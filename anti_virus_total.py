@@ -2,6 +2,10 @@ import os
 import zipfile
 import requests
 
+# Voir la biblio de virustotal
+# re demander une cley d'api
+
+
 # Fonction pour lire la clé d'API à partir du fichier api_key.txt
 def get_api_key():
     with open('api_key.txt', 'r') as f:
