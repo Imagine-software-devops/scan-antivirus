@@ -1,10 +1,7 @@
 import os
 import zipfile
 import requests
-
-# Voir la biblio de virustotal
-# re demander une cley d'api
-
+import urllib.parse
 
 # Fonction pour lire la clé d'API à partir du fichier api_key.txt
 def get_api_key():
@@ -12,7 +9,7 @@ def get_api_key():
         return f.read().strip()
 
 # URL de l'API de VirusTotal pour analyser un fichier
-SCAN_URL = 'https://www.virustotal.com/api/v3/files'
+SCAN_URL = 'https://www.virustotal.com/api/v3/'
 
 # Classe VirusTotalScanner pour gérer les fonctionnalités de l'API VirusTotal
 class VirusTotalScanner:
@@ -21,13 +18,14 @@ class VirusTotalScanner:
 
     def get_file_report(self, file_hash):
         headers = {
+            "accept": "application/json",
             'x-apikey': self.api_key,
         }
         params = {
             'fields': 'data.attributes.last_analysis_results',
         }
         # Envoie une requête GET à l'API de VirusTotal pour obtenir le rapport d'analyse du fichier
-        response = requests.get(f'{SCAN_URL}/{file_hash}', headers=headers, params=params)
+        response = requests.get(f'{SCAN_URL}/analyses/{urllib.parse.quote(file_hash)}', headers=headers, params=params)
         if response.status_code == 200:
             return response.json()  # Renvoie le rapport au format JSON s'il est disponible
         else:
@@ -35,12 +33,13 @@ class VirusTotalScanner:
 
     def upload_and_scan_zip(self, zip_file_path):
         with open(zip_file_path, 'rb') as f:
-            files = {'file': (zip_file_path, f)}
+            files = {'file': (zip_file_path, f, "application/x-zip-compressed")}
             headers = {
+                "accept": "application/json",
                 'x-apikey': self.api_key,
             }
             # Envoie une requête POST à l'API de VirusTotal pour analyser le fichier zip
-            response = requests.post(SCAN_URL, headers=headers, files=files)
+            response = requests.post(f'{SCAN_URL}/files', headers=headers, files=files)
             if response.status_code == 200:
                 data = response.json()
                 file_hash = data['data']['id']  # Récupère l'ID de fichier à partir de la réponse de l'API
@@ -48,7 +47,7 @@ class VirusTotalScanner:
             else:
                 return None
 
-# Fonction pour créer un fichier zip à partir d'un dossier spécifié
+# Fonction pour créer un fichier zip à partir d'un dossier spécifié OK
 def zip_folder(folder_path, output_path):
     with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(folder_path):
@@ -60,9 +59,9 @@ def zip_folder(folder_path, output_path):
 # Fonction principale
 def main():
     # Remplacez 'folder_to_zip' par le chemin du dossier que vous souhaitez zipper
-    folder_to_zip = 'chemin/vers/votre/dossier'
+    folder_to_zip = './test'
     # Remplacez 'output_zip_file.zip' par le chemin du fichier zip de sortie
-    output_zip_file = 'output_zip_file.zip'
+    output_zip_file = './output_zip_file.zip'
 
     # Création du fichier zip
     zip_folder(folder_to_zip, output_zip_file)
