@@ -71,6 +71,7 @@ def main():
 
     # Envoi du fichier zip à VirusTotal pour analyse
     result = scanner.upload_and_scan_zip(output_zip_file)
+    os.remove(output_zip_file) # Suppression du zip après utilisation
     if result:
         print(result)
     else:
